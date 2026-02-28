@@ -1,0 +1,43 @@
+
+services:
+  db:
+    image: postgres:15
+    restart: always
+    env_file:
+      - .env.docker
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "${DB_PORT:-5432}:${DB_PORT:-5432}"
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/nextjs/Dockerfile
+    # mount the project and keep host node_modules persistent to allow
+    # live-reloading via Next.js dev server
+    volumes:
+      - .:/app:delegated
+      # avoid overwriting container node_modules when mounting the project
+      - /app/node_modules
+    entrypoint: ["npm", "run", "dev"]
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - "${APP_PORT:-3000}:${APP_PORT:-3000}"
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app
+
+volumes:
+  pgdata:

@@ -1,33 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Multi‑Auth Template
 
-## Getting Started
+This repository is a customizable Next.js starter focused on authentication and
+role-based access. It includes a basic multi-auth UI along with a layered
+back-end structure. You can modify the front-end components freely; the
+business logic lives under `lib/` and is unaffected by UI changes.
 
-First, run the development server:
+## Architectural Layers
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Repository layer** (`lib/repositories`) handles direct database access via
+  Prisma.
+- **Service layer** (`lib/services`) encapsulates business rules and workflows
+  like registration, login validation, profile updates, etc.
+- **Action layer** (`lib/actions`) bridges between server components/pages and
+  the service layer, typically used by client actions in Next.js.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+These layers operate independently from the UI; you may remove or replace
+components without touching the data logic.
 
 ## Project Structure
 

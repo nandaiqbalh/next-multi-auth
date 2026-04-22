@@ -55,43 +55,72 @@ export default function UserFormDialog({ open, onOpenChange, initialData, onSubm
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="max-w-4xl h-[80vh] p-0 flex flex-col overflow-hidden">
+        <DialogHeader className="sticky top-0 z-10 border-b bg-background px-6 py-4">
           <DialogTitle>{initialData ? "Edit User" : "Create User"}</DialogTitle>
           <DialogDescription>
             {initialData ? "Update user details and role." : "Create a new ADMIN or USER account."}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="flex-1 space-y-3 overflow-y-auto px-6 py-4">
+          <div className="space-y-1">
+            <label htmlFor="user-name" className="text-sm font-medium text-slate-700">Full Name</label>
           <Input
+            id="user-name"
             placeholder="Full name"
             value={form.name}
             onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
           />
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="user-email" className="text-sm font-medium text-slate-700">Email</label>
           <Input
+            id="user-email"
             type="email"
             placeholder="Email"
             value={form.email}
             onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
           />
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="user-phone" className="text-sm font-medium text-slate-700">Phone</label>
           <Input
+            id="user-phone"
             placeholder="Phone"
             value={form.phone}
             onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
           />
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="user-username" className="text-sm font-medium text-slate-700">Username</label>
           <Input
+            id="user-username"
             placeholder="Username (optional)"
             value={form.username}
             onChange={(event) => setForm((prev) => ({ ...prev, username: event.target.value }))}
           />
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="user-password" className="text-sm font-medium text-slate-700">
+              {initialData ? "New Password" : "Password"}
+            </label>
           <Input
+            id="user-password"
             type="password"
             placeholder={initialData ? "New password (optional)" : "Password"}
             value={form.password}
             onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
           />
+          </div>
 
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-slate-700">Role</label>
           <Select value={form.role} onValueChange={(value) => setForm((prev) => ({ ...prev, role: value }))}>
             <SelectTrigger>
               <SelectValue placeholder="Select role" />
@@ -101,8 +130,10 @@ export default function UserFormDialog({ open, onOpenChange, initialData, onSubm
               <SelectItem value="ADMIN">ADMIN</SelectItem>
             </SelectContent>
           </Select>
+          </div>
+          </div>
 
-          <DialogFooter>
+          <DialogFooter className="sticky bottom-0 z-10 border-t bg-background px-6 py-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

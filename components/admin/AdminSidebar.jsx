@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { LayoutDashboard, PackageCheck, Users, UserRound, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, PackageCheck, Users, UserRound, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const menus = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/customers", label: "Customers", icon: UserRound },
   { href: "/admin/orders", label: "Orders", icon: PackageCheck },
+  { href: "/admin/products", label: "Products", icon: Package },
+  { href: "/admin/users", label: "Users", icon: Users },
 ];
 
 export default function AdminSidebar({ onNavigate }) {

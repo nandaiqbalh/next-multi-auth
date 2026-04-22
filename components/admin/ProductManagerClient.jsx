@@ -13,15 +13,19 @@ import PageHeader from "@/components/common/PageHeader";
 import EmptyState from "@/components/common/EmptyState";
 import LoadingState from "@/components/common/LoadingState";
 import TablePagination from "@/components/common/TablePagination";
-import CustomerFormDialog from "@/components/admin/CustomerFormDialog";
-import { createCustomerAction, deleteCustomerAction, updateCustomerAction } from "@/lib/actions/customer.actions";
+import ProductFormDialog from "@/components/admin/ProductFormDialog";
+import { createProductAction, deleteProductAction, updateProductAction } from "@/lib/actions/product.actions";
 
-export default function CustomerManagerClient({ customers, meta }) {
+function formatRupiah(value) {
+  return `Rp ${Number(value || 0).toLocaleString("id-ID")}`;
+}
+
+export default function ProductManagerClient({ products, meta }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [search, setSearch] = useState(meta.search ?? "");
 
@@ -34,26 +38,26 @@ export default function CustomerManagerClient({ customers, meta }) {
     if (search) params.set("search", search);
     else params.delete("search");
     params.delete("page");
-    router.push(`/admin/customers?${params.toString()}`);
+    router.push(`/admin/products?${params.toString()}`);
   };
 
   const handleCreateClick = () => {
-    setEditingCustomer(null);
+    setEditingProduct(null);
     setDialogOpen(true);
   };
 
-  const handleEditClick = (customer) => {
-    setEditingCustomer(customer);
+  const handleEditClick = (product) => {
+    setEditingProduct(product);
     setDialogOpen(true);
   };
 
   const handleSubmit = async (payload) => {
     let result;
 
-    if (editingCustomer) {
-      result = await updateCustomerAction(editingCustomer.id, payload);
+    if (editingProduct) {
+      result = await updateProductAction(editingProduct.id, payload);
     } else {
-      result = await createCustomerAction(payload);
+      result = await createProductAction(payload);
     }
 
     if (!result?.success) {
@@ -63,7 +67,7 @@ export default function CustomerManagerClient({ customers, meta }) {
 
     toast.success(result.message || "Saved.");
     setDialogOpen(false);
-    setEditingCustomer(null);
+    setEditingProduct(null);
     router.refresh();
   };
 
@@ -71,12 +75,12 @@ export default function CustomerManagerClient({ customers, meta }) {
     if (!deleteTarget) return;
 
     startTransition(async () => {
-      const result = await deleteCustomerAction(deleteTarget.id);
+      const result = await deleteProductAction(deleteTarget.id);
       if (!result?.success) {
         toast.error(result?.message || "Delete failed.");
         return;
       }
-      toast.success(result.message || "Customer deleted.");
+      toast.success(result.message || "Product deleted.");
       setDeleteTarget(null);
       router.refresh();
     });
@@ -85,9 +89,9 @@ export default function CustomerManagerClient({ customers, meta }) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Customers"
-        description="Manage Damai RO customer profiles."
-        actionLabel="Create Customer"
+        title="Products"
+        description="Manage product catalog and base prices."
+        actionLabel="Create Product"
         onAction={handleCreateClick}
         actionDisabled={isPending}
       />
@@ -95,54 +99,34 @@ export default function CustomerManagerClient({ customers, meta }) {
       <Card className="shadow-sm">
         <CardContent className="space-y-4 p-4 md:p-6">
           <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-            <Input placeholder="Search customers" value={search} onChange={(event) => setSearch(event.target.value)} />
+            <Input placeholder="Search products" value={search} onChange={(event) => setSearch(event.target.value)} />
             <Button type="button" variant="outline" onClick={syncFilters}>Filter</Button>
           </div>
 
           {isPending ? <LoadingState message="Saving changes..." /> : null}
 
-          {customers.length === 0 ? (
-            <EmptyState title="No customers found" description="Try adjusting the filter, or create a new customer." />
+          {products.length === 0 ? (
+            <EmptyState title="No products found" description="Try adjusting the filter, or create a new product." />
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Subscription</TableHead>
-                  <TableHead>Total Orders</TableHead>
+                  <TableHead>Product Name</TableHead>
+                  <TableHead>Base Price</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {customers.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell>
-                      <div className="font-medium text-slate-900">{customer.name || customer.user?.name || "-"}</div>
-                      <div className="text-xs text-slate-500">{customer.phone || customer.user?.phone || "-"}</div>
-                      <div className="text-xs text-slate-500">{customer.user?.email || "-"}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="max-w-xs space-y-1 text-xs text-slate-600">
-                        <div>{customer.locationNote || customer.address || "-"}</div>
-                        {customer.mapUrl ? (
-                          <a href={customer.mapUrl} target="_blank" rel="noreferrer" className="font-medium text-emerald-700 underline">
-                            Open Map
-                          </a>
-                        ) : null}
-                        {customer.housePhoto ? (
-                          <img src={customer.housePhoto} alt={`House of ${customer.name || "customer"}`} className="h-10 w-16 rounded border object-cover" />
-                        ) : null}
-                      </div>
-                    </TableCell>
-                    <TableCell>{customer.subscriptionNote || "-"}</TableCell>
-                    <TableCell>{customer._count?.orders ?? 0}</TableCell>
+                {products.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell className="font-medium text-slate-900">{product.name}</TableCell>
+                    <TableCell>{formatRupiah(product.price)}</TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
-                        <Button type="button" size="icon-sm" variant="outline" onClick={() => handleEditClick(customer)}>
+                        <Button type="button" size="icon-sm" variant="outline" onClick={() => handleEditClick(product)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button type="button" size="icon-sm" variant="destructive" onClick={() => setDeleteTarget(customer)}>
+                        <Button type="button" size="icon-sm" variant="destructive" onClick={() => setDeleteTarget(product)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -157,10 +141,10 @@ export default function CustomerManagerClient({ customers, meta }) {
         </CardContent>
       </Card>
 
-      <CustomerFormDialog
+      <ProductFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        initialData={editingCustomer}
+        initialData={editingProduct}
         isSubmitting={isPending}
         onSubmit={(payload) => {
           startTransition(async () => {
@@ -171,8 +155,8 @@ export default function CustomerManagerClient({ customers, meta }) {
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}
-        title="Delete customer"
-        description={deleteTarget ? `Delete ${deleteTarget.user?.name || deleteTarget.user?.email}?` : "Delete selected customer?"}
+        title="Delete product"
+        description={deleteTarget ? `Delete ${deleteTarget.name}?` : "Delete selected product?"}
         confirmLabel="Delete"
         cancelLabel="Cancel"
         onClose={() => setDeleteTarget(null)}

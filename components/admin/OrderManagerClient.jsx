@@ -28,7 +28,15 @@ const NEXT_STEPS = {
   CANCEL: [],
 };
 
-export default function OrderManagerClient({ orders, customers, meta }) {
+function formatRupiah(value) {
+  return `Rp ${Number(value || 0).toLocaleString("id-ID")}`;
+}
+
+function summarizeItems(items = []) {
+  return items.map((item) => `${item.quantity}x ${item.product?.name || "Product"}`).join(", ");
+}
+
+export default function OrderManagerClient({ orders, customers, products, meta }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -128,7 +136,9 @@ export default function OrderManagerClient({ orders, customers, meta }) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Customer</TableHead>
-                  <TableHead>Order</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>Total</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -137,12 +147,33 @@ export default function OrderManagerClient({ orders, customers, meta }) {
                 {orders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell>
-                      <div className="font-medium text-slate-900">{order.customer?.user?.name || "-"}</div>
-                      <div className="text-xs text-slate-500">{order.customer?.user?.phone || order.customer?.user?.email || "-"}</div>
+                      <div className="font-medium text-slate-900">{order.customer?.name || order.customer?.user?.name || "-"}</div>
+                      <div className="text-xs text-slate-500">{order.customer?.phone || order.customer?.user?.phone || "-"}</div>
                     </TableCell>
                     <TableCell>
-                      <div>{order.quantity} galon</div>
-                      <div className="text-slate-500">Rp {Number(order.totalPrice).toLocaleString("id-ID")}</div>
+                      <div className="space-y-1">
+                        <div className="max-w-xs text-xs text-slate-600 line-clamp-2">{order.customer?.locationNote || order.customer?.address || "No location note"}</div>
+                        {order.customer?.mapUrl ? (
+                          <a href={order.customer.mapUrl} target="_blank" rel="noreferrer" className="text-xs font-medium text-emerald-700 underline">
+                            Open Map
+                          </a>
+                        ) : (
+                          <span className="text-xs text-slate-400">No map</span>
+                        )}
+                        {order.customer?.housePhoto ? (
+                          <img
+                            src={order.customer.housePhoto}
+                            alt={`House of ${order.customer?.name || "customer"}`}
+                            className="h-12 w-16 rounded-md border object-cover"
+                          />
+                        ) : null}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="max-w-xs text-sm text-slate-700">{summarizeItems(order.items)}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-medium text-slate-900">{formatRupiah(order.totalPrice)}</div>
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={order.status} />
@@ -168,48 +199,52 @@ export default function OrderManagerClient({ orders, customers, meta }) {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         customers={customers}
+        products={products}
         isSubmitting={isPending}
         onSubmit={handleCreate}
       />
 
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="max-w-4xl h-[80vh] p-0 flex flex-col overflow-hidden">
+          <DialogHeader className="sticky top-0 z-10 border-b bg-background px-6 py-4">
             <DialogTitle>Update Order Status</DialogTitle>
             <DialogDescription>Move order to the next valid state.</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3">
-            <div className="rounded-md border bg-slate-50 p-3 text-sm text-slate-700">
-              <div className="font-medium">{activeOrder?.customer?.user?.name || "-"}</div>
-              <div>{activeOrder?.quantity ?? 0} galon</div>
-              <div className="mt-1">Current: {activeOrder?.status || "-"}</div>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="flex-1 space-y-3 overflow-y-auto px-6 py-4">
+              <div className="rounded-md border bg-slate-50 p-3 text-sm text-slate-700">
+                <div className="font-medium">{activeOrder?.customer?.name || activeOrder?.customer?.user?.name || "-"}</div>
+                <div>{summarizeItems(activeOrder?.items || []) || "No items"}</div>
+                <div>Total: {formatRupiah(activeOrder?.totalPrice || 0)}</div>
+                <div className="mt-1">Current: {activeOrder?.status || "-"}</div>
+              </div>
+
+              <Select value={nextStatus} onValueChange={setNextStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select next status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(activeOrder ? NEXT_STEPS[activeOrder.status] ?? [] : []).map((item) => (
+                    <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <Select value={nextStatus} onValueChange={setNextStatus}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select next status" />
-              </SelectTrigger>
-              <SelectContent>
-                {(activeOrder ? NEXT_STEPS[activeOrder.status] ?? [] : []).map((item) => (
-                  <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <DialogFooter className="sticky bottom-0 z-10 border-t bg-background px-6 py-4">
+              <Button type="button" variant="outline" onClick={() => setStatusDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                disabled={!activeOrder || !nextStatus || isPending}
+                onClick={() => activeOrder && handleNextStatus(activeOrder.id, nextStatus)}
+              >
+                Update Status
+              </Button>
+            </DialogFooter>
           </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setStatusDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              disabled={!activeOrder || !nextStatus || isPending}
-              onClick={() => activeOrder && handleNextStatus(activeOrder.id, nextStatus)}
-            >
-              Update Status
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

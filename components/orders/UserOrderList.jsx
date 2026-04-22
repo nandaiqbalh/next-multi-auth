@@ -19,6 +19,10 @@ const NEXT_STEPS = {
   CANCEL: [],
 };
 
+function summarizeItems(items = []) {
+  return items.map((item) => `${item.quantity}x ${item.product?.name || "Product"}`).join(", ");
+}
+
 export default function UserOrderList({ orders, meta }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -85,7 +89,7 @@ export default function UserOrderList({ orders, meta }) {
               {orders.map((order) => (
                 <tr key={order.id} className="border-t">
                   <td className="px-4 py-3">
-                    <div className="font-medium">{order.quantity} galon</div>
+                    <div className="font-medium">{summarizeItems(order.items)}</div>
                     <div className="text-xs text-slate-500">Rp {Number(order.totalPrice).toLocaleString("id-ID")}</div>
                     <div className="text-xs text-slate-500">{new Date(order.createdAt).toLocaleString("id-ID")}</div>
                   </td>

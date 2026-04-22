@@ -3,7 +3,7 @@ import ToastClient from "@/components/ui/ToastClient";
 import redirectIfAuthenticated from "./redirect-if-auth";
 
 export const metadata = {
-    title: "Login — MultiAuth",
+    title: "Login — Damai RO",
 };
 
 export default async function LoginPage(props) {

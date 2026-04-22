@@ -10,8 +10,6 @@ import { toast } from "../ui/sonner";
 import { registerSchema } from "@/lib/validations/auth.schema";
 import AuthInput from "./AuthInput";
 import AuthButton from "./AuthButton";
-import AuthDivider from "./AuthDivider";
-import GoogleButton from "./GoogleButton";
 import ErrorDialog from "@/components/ui/error-dialog";
 import StrengthBar from "@/components/ui/strength-bar";
 
@@ -138,8 +136,6 @@ export default function RegisterForm() {
           {...register("confirmPassword")}
         />
         <AuthButton loading={isSubmitting}>Create Account</AuthButton>
-        <AuthDivider />
-        <GoogleButton callbackUrl="/" />
         <p className="text-center text-neutral-600 text-[11px] tracking-wide">
           Already have an account?{" "}
           <Link href="/login" className="text-neutral-800 font-medium hover:text-neutral-950 transition-colors">

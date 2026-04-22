@@ -6,14 +6,25 @@
 // original filename comment kept below for clarity:
 // app/admin/users/page.jsx
 export const metadata = {
-  title: "User Management — MultiAuth",
+  title: "User Management — Damai RO",
 };
 
-export default function AdminUsersPage() {
-  return (
-    <div className="space-y-4">
-      <h1 className="text-3xl font-bold">Users Management</h1>
-      <p className="text-neutral-600">Here you can manage application users. (Functionality to be added.)</p>
-    </div>
-  );
+import { getAllUsersAction } from "@/lib/actions/user.actions";
+import UserManagerClient from "@/components/admin/UserManagerClient";
+
+export default async function AdminUsersPage({ searchParams }) {
+  const params = await Promise.resolve(searchParams ?? {});
+  const response = await getAllUsersAction({
+    search: params.search ?? "",
+    role: params.role ?? undefined,
+    page: Number(params.page ?? 1),
+    limit: 10,
+  });
+
+  const users = response.success ? response.data.items : [];
+  const meta = response.success
+    ? { total: response.data.total, page: response.data.page, totalPages: response.data.totalPages, search: params.search ?? "", role: params.role ?? "" }
+    : { total: 0, page: 1, totalPages: 1, search: params.search ?? "", role: params.role ?? "" };
+
+  return <UserManagerClient users={users} meta={meta} />;
 }

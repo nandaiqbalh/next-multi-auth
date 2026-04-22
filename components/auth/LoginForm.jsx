@@ -11,8 +11,6 @@ import { toast } from "../ui/sonner";
 import { loginSchema } from "@/lib/validations/auth.schema";
 import AuthInput from "./AuthInput";
 import AuthButton from "./AuthButton";
-import AuthDivider from "./AuthDivider";
-import GoogleButton from "./GoogleButton";
 import ErrorDialog from "@/components/ui/error-dialog";
 
 export default function LoginForm() {
@@ -48,7 +46,7 @@ export default function LoginForm() {
 
         // navigate with a flag so destination page can show a toast
         router.push(
-            role === "ADMIN" ? "/admin/dashboard?toast=welcome" : "/?toast=welcome"
+            role === "ADMIN" ? "/admin/dashboard?toast=welcome" : "/orders?toast=welcome"
         );
     };
 
@@ -81,15 +79,13 @@ export default function LoginForm() {
                 />
                 <div className="flex justify-end">
                     <Link
-                        href="/forgot-password"
+                        href="#"
                         className="text-neutral-500 text-[11px] tracking-wide hover:text-neutral-900 transition-colors"
                     >
-                        Forgot password?
+                        Hubungi admin jika lupa password
                     </Link>
                 </div>
                 <AuthButton loading={isSubmitting}>Login</AuthButton>
-                <AuthDivider />
-                <GoogleButton callbackUrl="/" />
                 <p className="text-center text-neutral-600 text-[11px] tracking-wide">
                     Don't have an account?{" "}
                     <Link href="/register" className="text-neutral-800 font-medium hover:text-neutral-950 transition-colors">

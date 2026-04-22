@@ -6,9 +6,9 @@ import { redirect } from "next/navigation";
 
 export default async function redirectIfAuthenticated() {
   const session = await getServerSession(authOptions);
-  if (session?.user?.role === "ADMIN") {
+  if (session?.user?.role === "ADMIN" || session?.user?.role === "SUPERADMIN") {
     redirect("/admin/dashboard");
   } else if (session?.user) {
-    redirect("/");
+    redirect("/orders");
   }
 }

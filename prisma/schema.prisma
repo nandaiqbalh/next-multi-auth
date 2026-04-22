@@ -21,6 +21,13 @@ enum Gender {
   Prefer_not_to_say
 }
 
+enum OrderStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCESS
+  CANCEL
+}
+
 model User {
   id        String   @id @default(cuid())
   name      String?
@@ -39,6 +46,34 @@ model User {
   // relations to support NextAuth
   accounts  Account[]
   sessions  Session[]
+
+  customer  Customer?
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  address   String?
+  note      String?
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders    Order[]
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  customerId  String
+  quantity    Int
+  price       Int
+  totalPrice  Int
+  status      OrderStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  customer    Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, createdAt])
+  @@index([status, createdAt])
 }
 
 // ----- NextAuth models for Prisma adapter -----

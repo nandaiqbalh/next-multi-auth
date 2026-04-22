@@ -1,7 +1,7 @@
 import RegisterForm from "@/components/auth/RegisterForm";
 
 export const metadata = {
-    title: "Register — MultiAuth",
+    title: "Register — Damai RO",
 };
 
 export default function RegisterPage() {

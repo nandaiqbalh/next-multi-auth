@@ -6,4 +6,4 @@ docker-compose.yml
 .gitignore
 .env
 .env.local
-.env.docker
+.env

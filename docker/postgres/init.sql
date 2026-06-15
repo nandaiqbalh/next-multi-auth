@@ -18,7 +18,7 @@ http {
     }
 }
 EOF && \
-if [ ! -f .env.docker ]; then cp .env .env.docker; fi && \
+if [ ! -f .env ]; then cp .env .env; fi && \
 cat <<'EOF' > next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {

@@ -12,92 +12,126 @@ business logic lives under `lib/` and is unaffected by UI changes.
 - **Service layer** (`lib/services`) encapsulates business rules and workflows
   like registration, login validation, profile updates, etc.
 - **Action layer** (`lib/actions`) bridges between server components/pages and
-  the service layer, typically used by client actions in Next.js.
+  the service layer, typically used by server actions in Next.js.
 
 These layers operate independently from the UI; you may remove or replace
 components without touching the data logic.
 
-## Project Structure
+**Full architecture documentation** can be found in
+[`docs/architecture/`](docs/architecture/).
 
-The repository is organized roughly as follows:
+## Project Structure
 
 ```
 app/                   # Next.js app routes and layouts
-  (auth)/             # login/register helpers
-  (main)/             # client-facing pages (account, product, etc.)
-  admin/              # administrative pages
+  (auth)/             # login/register pages (grouped)
+  admin/              # admin dashboard, users, layout with auth guard
+  api/auth/           # NextAuth route handler + register API
 components/           # reusable UI components grouped by domain
   auth/               # inputs, buttons, forms for authentication
-  common/             # header, footer, dialogs, layout helpers
-  ui/                 # base design system (card, dialog, etc.)
-lib/                  # utility functions, font definitions, services
-prisma/               # Prisma schema and migrations
+  admin/              # admin navigation, side drawers
+  common/             # header, layout helpers, slide dialogs
+  ui/                 # base design system (card, dialog, sonner, etc.)
+lib/                  # utility functions, fonts, business logic
+  actions/            # server actions (register, profile, password)
+  model/              # response data structures
+  repositories/       # Prisma data access (user.repository)
+  services/           # business rules (auth.service, profile.service)
+  validations/        # Zod schemas and session validation
+prisma/               # Prisma schema and SQL migrations
+docker/               # Dockerfiles, nginx config, init scripts
 public/               # static assets (images, fonts)
-docker/               # Dockerfiles and configuration for containers
-
+docs/                 # architecture documentation & patterns
 ```
-
-**Note:** business logic layers such as repositories, services, and validations
-live under `lib/` and are not modified by the UI template changes.
 
 ## Running the Project
 
 ### Prerequisites
 
-- Node.js 18+ (or use `nvm`/`volta` to install)
-- PostgreSQL database (see environment variables below)
-- `npm`, `yarn`, or `pnpm` package manager
+- Node.js 18+ (or use `nvm`/`volta`)
+- PostgreSQL database
+- `npm`, `yarn`, or `pnpm`
 
 ### Environment Variables
 
-Create a `.env` file in the project root with values similar to:
+Create a `.env` file in the project root. Key variables:
 
 ```env
+# Database
 DATABASE_URL="postgresql://user:password@localhost:5432/next-multi-auth"
+DB_PORT=5432           # host port for Postgres (Docker only)
+
+# Authentication
 NEXTAUTH_SECRET="some-random-secret"
-# add other variables used by the app (SMTP settings, etc.)
+NEXTAUTH_URL="http://localhost:3000"
+
+# App port (Docker only)
+APP_PORT=3000          # host port for the Next.js app
+
+# Google OAuth (optional)
+GOOGLE_CLIENT_ID="..."
+GOOGLE_CLIENT_SECRET="..."
 ```
 
 ### Local Development (without Docker)
 
-1. Install dependencies:
-   ```bash
-   npm install
-   # or yarn install
-   ```
-2. Prepare the database:
-   ```bash
-   npx prisma migrate dev
-   npx prisma generate
-   ```
-3. Start the dev server:
-   ```bash
-   npm run dev
-   ```
-4. Open `http://localhost:3000` in your browser.
+```bash
+npm install
+npx prisma migrate dev
+npx prisma generate
+npm run dev
+# Opens at http://localhost:3000
+```
 
-### Using Docker
-
-A `docker-compose.dev.yml` is provided for development; services include
-PostgreSQL and the Next.js app. To start everything:
+### Using Docker (Development)
 
 ```bash
-# build and start containers
 docker compose -f docker-compose.dev.yml up --build
 ```
 
-The app will be available at `http://localhost:3000`. To apply migrations
-inside the container, run:
+The container runs **migrations automatically** on startup, then starts the
+Next.js dev server with live reload.
+
+The app is available at `http://localhost:${APP_PORT:-3000}`.
+
+| Service | Internal Port | Host Port (default) |
+|---------|--------------|---------------------|
+| app     | 3000         | `${APP_PORT:-3000}` |
+| db      | 5432         | `${DB_PORT:-5432}`  |
+| nginx   | 80           | 80                  |
+
+### Using Docker (Production)
 
 ```bash
-docker compose exec app npx prisma migrate dev
+# Build image first
+docker compose -f docker-compose.prod.yml build
+
+# Run
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-For production, `docker-compose.prod.yml` references a prebuilt image and
-can be used with your own registry.
+The production entrypoint runs `prisma migrate deploy` then starts the
+optimized production server via `next start`.
 
-## Deploy on Vercel
+## Feature Summary
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Feature | Details |
+|---------|---------|
+| Sign-up | Name, username, phone, email, password (Zod validated) |
+| Sign-in | Email or username + password, or Google OAuth |
+| Roles | USER / ADMIN / SUPERADMIN (enforced at API + layout level) |
+| Profile | Edit name, username, phone, gender, birthdate |
+| Password | Change password with validation (old ≠ new, 8+ chars) |
+| Admin | Dashboard + user management (auth-gated layout) |
+| Notifications | Sonner toasts, error dialogs, success banners |
+| Docker | Dev (hot-reload) and production compose files |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Architecture Docs
+
+Detailed patterns, data flows, and code flows are documented under
+[`docs/architecture/`](docs/architecture/):
+
+- [Overview & Layer Design](docs/architecture/overview.md)
+- [Project Structure](docs/architecture/project-structure.md)
+- [Authentication Pipeline](docs/architecture/auth-pipeline.md)
+- [Data & Code Flow](docs/architecture/data-flow.md)

@@ -21,7 +21,7 @@ services:
       - .:/app:delegated
       # avoid overwriting container node_modules when mounting the project
       - /app/node_modules
-    entrypoint: ["npm", "run", "dev"]
+    entrypoint: ["/bin/sh", "-c", "npx prisma generate && npx prisma migrate deploy && npm run dev"]
     restart: unless-stopped
     env_file:
       - .env
